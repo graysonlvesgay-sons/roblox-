@@ -1,0 +1,32 @@
+local UserInputService = game:GetService("UserInputService")
+local player = game.Players.LocalPlayer
+
+-- Settings
+local turnRightKey = Enum.KeyCode.E
+local straightenKey = Enum.KeyCode.Q
+
+local function turnHeadRight()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local head = character:FindFirstChild("Head")
+    if head then
+        head.CFrame = head.CFrame * CFrame.Angles(0, math.rad(45), 0)
+    end
+end
+
+local function straightenHead()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local head = character:FindFirstChild("Head")
+    if head then
+        head.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 1.5, 0)
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.KeyCode == turnRightKey then
+        turnHeadRight()
+    elseif input.KeyCode == straightenKey then
+        straightenHead()
+    end
+end)
