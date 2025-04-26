@@ -1,0 +1,92 @@
+-- Script inside StarterPlayerScripts
+-- FULL CONTROL SCRIPT (GUI + Server logic)
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+-- Create RemoteEvent
+local remoteEvent = Instance.new("RemoteEvent")
+remoteEvent.Name = "FullControlEvent"
+remoteEvent.Parent = ReplicatedStorage
+
+-- Create GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ControlGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 400)
+frame.Position = UDim2.new(0, 10, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Parent = screenGui
+
+local buttonNames = {"Turn Head Right", "Straighten Head", "Turn Black", "Remove Name"}
+local buttonFunctions = {"TurnRight", "Straighten", "TurnBlack", "RemoveName"}
+
+for i, name in ipairs(buttonNames) do
+    local button = Instance.new("TextButton")
+    button.Name = buttonFunctions[i]
+    button.Size = UDim2.new(1, -20, 0, 50)
+    button.Position = UDim2.new(0, 10, 0, (i-1) * 60 + 10)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.TextColor3 = Color3.new(1,1,1)
+    button.Font = Enum.Font.SourceSansBold
+    button.TextSize = 24
+    button.Text = name
+    button.Parent = frame
+
+    button.MouseButton1Click:Connect(function()
+        remoteEvent:FireServer(buttonFunctions[i])
+    end)
+end
+
+-- Handle Respawn: Auto reapply black + no name
+player.CharacterAdded:Connect(function(char)
+    char:WaitForChild("HumanoidRootPart")
+    remoteEvent:FireServer("TurnBlack")
+    remoteEvent:FireServer("RemoveName")
+end)
+
+-- SERVER-SIDE Logic (only run on server)
+if RunService:IsServer() then
+    remoteEvent.OnServerEvent:Connect(function(player, action)
+        local character = player.Character
+        if not character then return end
+
+        local head = character:FindFirstChild("Head")
+        local humanoidRoot = character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+
+        if action == "TurnRight" then
+            if head then
+                head.CFrame = head.CFrame * CFrame.Angles(0, math.rad(45), 0)
+            end
+
+        elseif action == "Straighten" then
+            if head and humanoidRoot then
+                head.CFrame = humanoidRoot.CFrame * CFrame.new(0, 1.5, 0)
+            end
+
+        elseif action == "TurnBlack" then
+            for _, part in ipairs(character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Color = Color3.new(0,0,0)
+                    part.Material = Enum.Material.SmoothPlastic
+                elseif part:IsA("Accessory") and part:FindFirstChild("Handle") then
+                    part.Handle.Color = Color3.new(0,0,0)
+                    part.Handle.Material = Enum.Material.SmoothPlastic
+                end
+            end
+
+        elseif action == "RemoveName" then
+            if humanoid then
+                humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+            end
+        end
+    end)
+end
