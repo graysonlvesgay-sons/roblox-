@@ -1,0 +1,76 @@
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+--// Variables
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local head = character:WaitForChild("Head")
+local humanoid = character:WaitForChild("Humanoid")
+--// RemoteEvent for server-side changes
+local remote = Instance.new("RemoteEvent")
+remote.Name = "HeadControlEvent"
+remote.Parent = ReplicatedStorage
+--// GUI Setup
+local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+local turnRightButton = Instance.new("TextButton", screenGui)
+local straightButton = Instance.new("TextButton", screenGui)
+local colorButton = Instance.new("TextButton", screenGui)
+local removeNameButton = Instance.new("TextButton", screenGui)
+screenGui.Name = "HeadControlGUI"
+turnRightButton.Size = UDim2.new(0, 150, 0, 50)
+turnRightButton.Position = UDim2.new(0, 10, 0, 10)
+turnRightButton.Text = "Turn Head Right"
+straightButton.Size = UDim2.new(0, 150, 0, 50)
+straightButton.Position = UDim2.new(0, 10, 0, 70)
+straightButton.Text = "Straighten Head"
+colorButton.Size = UDim2.new(0, 150, 0, 50)
+colorButton.Position = UDim2.new(0, 10, 0, 130)
+colorButton.Text = "Turn Black"
+removeNameButton.Size = UDim2.new(0, 150, 0, 50)
+removeNameButton.Position = UDim2.new(0, 10, 0, 190)
+removeNameButton.Text = "Remove Name"
+--// RemoteEvent Listener (Server Side Actions)
+remote.OnServerEvent:Connect(function(plr, action)
+    local char = plr.Character
+    if not char then return end
+    if action == "TurnRight" then
+        local head = char:FindFirstChild("Head")
+        if head then
+            head.CFrame = head.CFrame * CFrame.Angles(0, math.rad(90), 0)
+        end
+    elseif action == "Straighten" then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local head = char:FindFirstChild("Head")
+        if head and hrp then
+            head.CFrame = CFrame.new(head.Position) * CFrame.Angles(0, hrp.Orientation.Y * math.pi/180, 0)
+        end
+    elseif action == "TurnBlack" then
+        for _, part in ipairs(char:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Color = Color3.fromRGB(0, 0, 0)
+            end
+        end
+    elseif action == "RemoveName" then
+        if char:FindFirstChild("Head") and char.Head:FindFirstChild("Overhead") then
+            char.Head.Overhead:Destroy()
+        end
+        if char:FindFirstChildOfClass("Humanoid") then
+            char:FindFirstChildOfClass("Humanoid").DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+        end
+    end
+end)
+--// Button Functions
+turnRightButton.MouseButton1Click:Connect(function()
+    remote:FireServer("TurnRight")
+end)
+straightButton.MouseButton1Click:Connect(function()
+    remote:FireServer("Straighten")
+end)
+colorButton.MouseButton1Click:Connect(function()
+    remote:FireServer("TurnBlack")
+end)
+removeNameButton.MouseButton1Click:Connect(function()
+    remote:FireServer("RemoveName")
+end)
+
