@@ -1,0 +1,75 @@
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+--// Variables
+local player = Players.LocalPlayer
+
+-- Create or find the RemoteEvent
+local remote = ReplicatedStorage:FindFirstChild("HeadControlEvent")
+if not remote then
+    remote = Instance.new("RemoteEvent")
+    remote.Name = "HeadControlEvent"
+    remote.Parent = ReplicatedStorage
+end
+
+--// GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HeadControlGUI"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 50, 0, 50)
+closeButton.Position = UDim2.new(1, -60, 0, 10)
+closeButton.Text = "X"
+closeButton.Parent = screenGui
+
+-- Turn Right Button
+local turnRightButton = Instance.new("TextButton")
+turnRightButton.Size = UDim2.new(0, 150, 0, 50)
+turnRightButton.Position = UDim2.new(0, 10, 0, 10)
+turnRightButton.Text = "Turn Head Right"
+turnRightButton.Parent = screenGui
+
+-- Straighten Button
+local straightenButton = Instance.new("TextButton")
+straightenButton.Size = UDim2.new(0, 150, 0, 50)
+straightenButton.Position = UDim2.new(0, 10, 0, 70)
+straightenButton.Text = "Straighten Head"
+straightenButton.Parent = screenGui
+
+-- Turn Black Button
+local colorButton = Instance.new("TextButton")
+colorButton.Size = UDim2.new(0, 150, 0, 50)
+colorButton.Position = UDim2.new(0, 10, 0, 130)
+colorButton.Text = "Turn Black"
+colorButton.Parent = screenGui
+
+-- Remove Name Button
+local removeNameButton = Instance.new("TextButton")
+removeNameButton.Size = UDim2.new(0, 150, 0, 50)
+removeNameButton.Position = UDim2.new(0, 10, 0, 190)
+removeNameButton.Text = "Remove Name"
+removeNameButton.Parent = screenGui
+
+--// Functions
+turnRightButton.MouseButton1Click:Connect(function()
+    remote:FireServer("TurnRight")
+end)
+
+straightenButton.MouseButton1Click:Connect(function()
+    remote:FireServer("Straighten")
+end)
+
+colorButton.MouseButton1Click:Connect(function()
+    remote:FireServer("TurnBlack")
+end)
+
+removeNameButton.MouseButton1Click:Connect(function()
+    remote:FireServer("RemoveName")
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
