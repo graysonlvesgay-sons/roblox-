@@ -1,0 +1,103 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- RemoteEvent Setup
+local remote = Instance.new("RemoteEvent")
+remote.Name = "HeadControlEvent"
+remote.Parent = ReplicatedStorage
+
+-- Create BillboardGui for actions
+local function createBillboardGui(player)
+    local character = player.Character
+    if not character then return end
+
+    local head = character:WaitForChild("Head")
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(0, 200, 0, 300)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Name = "ActionGui"
+    billboard.Parent = head
+
+    local function createButton(text, posY, name)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 180, 0, 40)
+        button.Position = UDim2.new(0, 10, 0, posY)
+        button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        button.TextColor3 = Color3.new(1, 1, 1)
+        button.Text = text
+        button.Name = name
+        button.Parent = billboard
+    end
+
+    createButton("Turn Right", 0, "TurnRight")
+    createButton("Straighten", 50, "Straighten")
+    createButton("Turn Black", 100, "TurnBlack")
+    createButton("Remove Name", 150, "RemoveName")
+end
+
+-- Setup when player joins
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        wait(1)
+        createBillboardGui(player)
+    end)
+end)
+
+-- Detect when buttons are clicked
+remote.OnServerEvent:Connect(function(player, action)
+    local character = player.Character
+    if not character then return end
+
+    if action == "TurnRight" then
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(90), 0)
+        end
+    elseif action == "Straighten" then
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = CFrame.new(hrp.Position)
+        end
+    elseif action == "TurnBlack" then
+        for _, part in ipairs(character:GetChildren()) do
+            if part:IsA("BasePart") then
+                part.Color = Color3.fromRGB(0, 0, 0)
+            end
+        end
+    elseif action == "RemoveName" then
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+        end
+        local head = character:FindFirstChild("Head")
+        if head then
+            for _, gui in ipairs(head:GetChildren()) do
+                if gui:IsA("BillboardGui") then
+                    gui:Destroy()
+                end
+            end
+        end
+    end
+end)
+
+-- Let the buttons talk to the server
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function(character)
+        wait(1)
+        local head = character:FindFirstChild("Head")
+        if head then
+            local gui = head:FindFirstChild("ActionGui")
+            if gui then
+                for _, button in ipairs(gui:GetChildren()) do
+                    if button:IsA("TextButton") then
+                        button.MouseButton1Click:Connect(function()
+                            remote:FireServer(button.Name)
+                        end)
+                    end
+                end
+            end
+        end
+    end)
+end)
